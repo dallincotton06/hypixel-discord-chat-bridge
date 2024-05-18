@@ -1,0 +1,128 @@
+{
+  "minecraft": {
+    "bot": {
+      "prefix": "!",
+      "commands": {
+        "8ball": true,
+        "accessories": true,
+        "armor": false,
+        "auction": true,
+        "bedwars": true,
+        "catacombs": true,
+        "daily": false,
+        "denick": false,
+        "duels": true,
+        "equipment": true,
+        "fairysouls": false,
+        "fetchur": false,
+        "guildexp": true,
+        "help": true,
+        "kitty": false,
+        "level": true,
+        "math": true,
+        "monthly": false,
+        "networth": true,
+        "pet": true,
+        "render": false,
+        "skills": true,
+        "skywars": true,
+        "skyblock": true,
+        "slayer": true,
+        "UHC": true,
+        "weekly": false,
+        "weight": true,
+        "winstreak": true,
+        "woolwars": false
+      },
+      "messageFormat": " »",
+      "messageRepeatBypassLength": 24
+    },
+    "fragBot": {
+      "enabled": true,
+      "whitelist": false,
+      "customWhitelist": [],
+      "blacklist": false,
+      "blacklisted": []
+    },
+    "guild": {
+      "guildExp": 50000
+    },
+    "API": {
+      "hypixelAPI": "https://api.hypixel.net",
+      "hypixelAPIkey": "8b221bca-52fc-450d-841e-799278c755f6",
+
+      "antiSniperAPI": "https://api.antisniper.net",
+      "antiSniperKey": "e55d5bb4-652c-49dd-b6c4-93c9b3926e5f",
+
+      "playerDBAPI": "https://playerdb.co/api/player/minecraft",
+
+      "pixelicAPI": "https://api.pixelic.de",
+      "pixelicAPIkey": "a205f661cdbd44cf922f3927020e5459",
+
+      "imgurAPIkey": "12a1eb0659f1c06d853b75124b5fe70c987a51a7"
+    },
+    "guildRequirements": {
+      "enabled": false,
+      "autoAccept": false,
+      "requirements": {
+        "bedwarsStars": 0,
+        "bedwarsStarsWithFKDR": 0,
+        "bedwarsFKDR": 0,
+
+        "skywarsStars": 0,
+        "skywarsStarsWithKDR": 0,
+        "skywarsKDR": 0,
+
+        "duelsWins": 0,
+        "duelsWinsWithWLR": 0,
+        "duelsWLR": 0,
+
+        "senitherWeight": 0,
+        "lilyWeight": 0,
+        "skyblockLevel": 0
+      }
+    },
+    "skyblockEventsNotifications": {
+      "enabled": true,
+      "notifiers": {
+        "BANK_INTEREST": false,
+        "DARK_AUCTION": true,
+        "ELECTION_BOOTH_OPENS": true,
+        "ELECTION_OVER": false,
+        "FALLEN_STAR_CULT": false,
+        "FEAR_MONGERER": false,
+        "JACOBS_CONTEST": false,
+        "JERRYS_WORKSHOP": false,
+        "NEW_YEAR_CELEBRATION": false,
+        "SEASON_OF_JERRY": false,
+        "SPOOKY_FESTIVAL": false,
+        "TRAVELING_ZOO": false
+      }
+    }
+  },
+  "discord": {
+    "bot": {
+      "token": "",
+      "serverID": "741113593897943121"
+    },
+    "channels": {
+      "guildChatChannel": "1108237261088239668",
+      "officerChannel": "763094385599709205",
+      "loggingChannel": "763094385599709205",
+      "debugMode": false,
+      "debugChannel": "763094385599709205"
+    },
+    "roles": {
+      "commandRole": "741115443607240746"
+    },
+    "other": {
+      "messageMode": "minecraft",
+      "filterMessages": true,
+      "joinMessage": false
+    }
+  },
+  "web": {
+    "enabled": true,
+    "port": 1439
+  }
+}
