@@ -1,13 +1,13 @@
-const HypixelDiscordChatBridgeError = require("../../contracts/errorHandler.js");
 const { EmbedBuilder } = require("discord.js");
-const config = require("../../../config.json");
 
 module.exports = {
   name: "unmute",
   description: "Unmutes the given user.",
+  moderatorOnly: true,
+  requiresBot: true,
   options: [
     {
-      name: "name",
+      name: "username",
       description: "Minecraft Username",
       type: 3,
       required: true,
@@ -15,15 +15,7 @@ module.exports = {
   ],
 
   execute: async (interaction) => {
-    const user = interaction.member;
-    if (
-      config.discord.commands.checkPerms === true &&
-      !(user.roles.cache.has(config.discord.commands.commandRole) || config.discord.commands.users.includes(user.id))
-    ) {
-      throw new HypixelDiscordChatBridgeError("You do not have permission to use this command.");
-    }
-
-    const name = interaction.options.getString("name");
+    const name = interaction.options.getString("username");
     bot.chat(`/g unmute ${name}`);
 
     const embed = new EmbedBuilder()

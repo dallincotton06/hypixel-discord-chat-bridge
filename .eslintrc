@@ -11,7 +11,9 @@
   },
   "globals": {
     "bot": true,
-    "client": true
+    "client": true,
+    "guild": true,
+    "imgurUrl": true
   },
   "rules": {
     "curly": ["warn", "multi-line", "consistent"],

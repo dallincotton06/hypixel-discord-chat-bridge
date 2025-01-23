@@ -1,6 +1,6 @@
+const { decodeData, formatUsername } = require("../../contracts/helperFunctions.js");
 const { getLatestProfile } = require("../../../API/functions/getLatestProfile.js");
 const { uploadImage } = require("../../contracts/API/imgurAPI.js");
-const { decodeData, formatUsername } = require("../../contracts/helperFunctions.js");
 const minecraftCommand = require("../../contracts/minecraftCommand.js");
 const { renderLore } = require("../../contracts/renderItem.js");
 
@@ -28,11 +28,13 @@ class EquipmentCommand extends minecraftCommand {
 
       username = formatUsername(username, profile.profileData?.game_mode);
 
-      if (profile.profile?.equippment_contents?.data === undefined) {
+      if (profile.profile.inventory?.equipment_contents?.data === undefined) {
         return this.send(`/gc This player has an Inventory API off.`);
       }
 
-      const { i: inventoryData } = await decodeData(Buffer.from(profile.profile.equippment_contents.data, "base64"));
+      const { i: inventoryData } = await decodeData(
+        Buffer.from(profile.profile.inventory?.equipment_contents?.data, "base64"),
+      );
 
       let response = "";
       for (const piece of Object.values(inventoryData)) {
@@ -52,7 +54,8 @@ class EquipmentCommand extends minecraftCommand {
         response += response.split(" | ").length == 4 ? link : `${link} | `;
       }
 
-      this.send(`/gc ${username}'s Equipment: ${response}`);
+      imgurUrl = response;
+      this.send(`/gc ${username}'s Equipment: Check Discord Bridge for image.`);
     } catch (error) {
       this.send(`/gc [ERROR] ${error}`);
     }

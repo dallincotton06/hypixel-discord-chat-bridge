@@ -7,7 +7,6 @@ const StateHandler = require("./handlers/StateHandler.js");
 const CommandHandler = require("./CommandHandler.js");
 const config = require("../../config.json");
 const Logger = require(".././Logger.js");
-const path = require("node:path");
 const fs = require("fs");
 
 class DiscordManager extends CommunicationBridge {
@@ -22,8 +21,14 @@ class DiscordManager extends CommunicationBridge {
   }
 
   connect() {
+    global.imgurUrl = "";
     global.client = new Client({
-      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+      ],
     });
 
     this.client = client;
@@ -40,15 +45,16 @@ class DiscordManager extends CommunicationBridge {
 
     for (const file of commandFiles) {
       const command = require(`./commands/${file}`);
+      if (command.verificationCommand === true && config.verification.enabled === false) {
+        continue;
+      }
+
       client.commands.set(command.name, command);
     }
 
-    const eventsPath = path.join(__dirname, "events");
-    const eventFiles = fs.readdirSync(eventsPath).filter((file) => file.endsWith(".js"));
-
+    const eventFiles = fs.readdirSync("src/discord/events").filter((file) => file.endsWith(".js"));
     for (const file of eventFiles) {
-      const filePath = path.join(eventsPath, file);
-      const event = require(filePath);
+      const event = require(`./events/${file}`);
       event.once
         ? client.once(event.name, (...args) => event.execute(...args))
         : client.on(event.name, (...args) => event.execute(...args));
@@ -90,7 +96,7 @@ class DiscordManager extends CommunicationBridge {
     if (message !== undefined && chat !== "debugChannel") {
       Logger.broadcastMessage(
         `${username} [${guildRank.replace(/§[0-9a-fk-or]/g, "").replace(/^\[|\]$/g, "")}]: ${message}`,
-        `Discord`
+        `Discord`,
       );
     }
 
@@ -103,6 +109,10 @@ class DiscordManager extends CommunicationBridge {
     if (channel === undefined) {
       Logger.errorMessage(`Channel ${chat} not found!`);
       return;
+    }
+    if (username === bot.username && message.endsWith("Check Discord Bridge for image.")) {
+      channel.send(imgurUrl);
+      imgurUrl = "";
     }
 
     switch (mode) {

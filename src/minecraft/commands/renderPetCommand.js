@@ -1,9 +1,9 @@
 const { getRarityColor, formatUsername } = require("../../contracts/helperFunctions.js");
-const minecraftCommand = require("../../contracts/minecraftCommand.js");
-const { renderLore } = require("../../contracts/renderItem.js");
 const { getLatestProfile } = require("../../../API/functions/getLatestProfile.js");
-const getPets = require("../../../API/stats/pets.js");
+const minecraftCommand = require("../../contracts/minecraftCommand.js");
 const { uploadImage } = require("../../contracts/API/imgurAPI.js");
+const { renderLore } = require("../../contracts/renderItem.js");
+const getPets = require("../../../API/stats/pets.js");
 
 class RenderCommand extends minecraftCommand {
   constructor(minecraft) {
@@ -28,8 +28,10 @@ class RenderCommand extends minecraftCommand {
       const data = await getLatestProfile(username);
 
       username = formatUsername(username, data.profileData?.game_mode);
-
       const profile = getPets(data.profile);
+      if (profile.length === 0) {
+        return this.send(`/gc ${username} does not have any pets.`);
+      }
 
       const pet = profile.pets.find((pet) => pet.active === true);
 
@@ -39,12 +41,13 @@ class RenderCommand extends minecraftCommand {
 
       const renderedItem = await renderLore(
         `§7[Lvl ${pet.level}] §${getRarityColor(pet.tier)}${pet.display_name}`,
-        pet.lore
+        pet.lore,
       );
 
       const upload = await uploadImage(renderedItem);
 
-      return this.send(`/gc ${username}'s Active Pet: ${upload.data.link ?? "Something went Wrong.."}`);
+      imgurUrl = upload.data.link ?? "Something went Wrong..";
+      return this.send(`/gc ${username}'s Active Pet: Check Discord Bridge for image.`);
     } catch (error) {
       console.log(error);
       this.send(`/gc [ERROR] ${error}`);

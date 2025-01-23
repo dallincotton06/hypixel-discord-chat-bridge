@@ -1,14 +1,16 @@
+const { checkRequirements, generateEmbed } = require("../../discord/commands/requirementsCommand.js");
 const { replaceAllRanks, replaceVariables } = require("../../contracts/helperFunctions.js");
-const { getLatestProfile } = require("../../../API/functions/getLatestProfile.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const updateRolesCommand = require("../../discord/commands/updateCommand.js");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const hypixel = require("../../contracts/API/HypixelRebornAPI.js");
-const { getUUID } = require("../../contracts/API/PlayerDBAPI.js");
+const { getUUID } = require("../../contracts/API/mowojangAPI.js");
 const eventHandler = require("../../contracts/EventHandler.js");
-const getWeight = require("../../../API/stats/weight.js");
+const { isUuid } = require("../../../API/utils/uuid.js");
 const messages = require("../../../messages.json");
-const { EmbedBuilder } = require("discord.js");
 const config = require("../../../config.json");
 const Logger = require("../../Logger.js");
+const { readFileSync } = require("fs");
 
 class StateHandler extends eventHandler {
   constructor(minecraft, command, discord) {
@@ -41,7 +43,7 @@ class StateHandler extends eventHandler {
     }
 
     if (this.isLobbyJoinMessage(message) && config.discord.other.autoLimbo === true) {
-      return bot.chat("\u00a7");
+      return bot.chat("/limbo");
     }
 
     if (this.isPartyMessage(message) && config.minecraft.fragBot.enabled === true) {
@@ -76,131 +78,32 @@ class StateHandler extends eventHandler {
 
     if (this.isRequestMessage(message)) {
       const username = replaceAllRanks(
-        message.split("has")[0].replaceAll("-----------------------------------------------------\n", "")
+        message.split("has")[0].replaceAll("-----------------------------------------------------\n", ""),
       );
       const uuid = await getUUID(username);
       if (config.minecraft.guildRequirements.enabled) {
-        const [player, profile] = await Promise.all([hypixel.getPlayer(uuid), getLatestProfile(uuid)]);
-        let meetRequirements = false;
-
-        const weight = getWeight(profile.profile, profile.uuid)?.weight?.senither?.total || 0;
-        const skyblockLevel = (profile.profile?.leveling?.experience || 0) / 100 ?? 0;
-
-        const bwLevel = player.stats.bedwars.level;
-        const bwFKDR = player.stats.bedwars.finalKDRatio;
-
-        const swLevel = player.stats.skywars.level / 5;
-        const swKDR = player.stats.skywars.KDRatio;
-
-        const duelsWins = player.stats.duels.wins;
-        const dWLR = player.stats.duels.WLRatio;
-
-        if (weight > config.minecraft.guildRequirements.requirements.senitherWeight) {
-          meetRequirements = true;
-        }
-
-        if (skyblockLevel > config.minecraft.guildRequirements.requirements.skyblockLevel) {
-          meetRequirements = true;
-        }
-
-        if (bwLevel > config.minecraft.guildRequirements.requirements.bedwarsStars) {
-          meetRequirements = true;
-        }
-        if (
-          bwLevel > config.minecraft.guildRequirements.requirements.bedwarsStarsWithFKDR &&
-          bwFKDR > config.minecraft.guildRequirements.requirements.bedwarsFKDR
-        ) {
-          meetRequirements = true;
-        }
-
-        if (swLevel > config.minecraft.guildRequirements.requirements.skywarsStars) {
-          meetRequirements = true;
-        }
-        if (
-          swLevel > config.minecraft.guildRequirements.requirements.skywarsStarsWithKDR &&
-          swKDR > config.minecraft.guildRequirements.requirements.skywarsStarsWithKDR
-        ) {
-          meetRequirements = true;
-        }
-
-        if (duelsWins > config.minecraft.guildRequirements.requirements.duelsWins) {
-          meetRequirements = true;
-        }
-        if (
-          duelsWins > config.minecraft.guildRequirements.requirements.duelsWinsWithWLR &&
-          dWLR > config.minecraft.guildRequirements.requirements.duelsWinsWithWLR
-        ) {
-          meetRequirements = true;
-        }
+        const playerInfo = await checkRequirements(uuid);
 
         bot.chat(
-          `/oc ${username} ${meetRequirements ? "meets" : "Doesn't meet"} Requirements. [BW] [${
-            player.stats.bedwars.level
-          }✫] FKDR: ${player.stats.bedwars.finalKDRatio} | [SW] [${player.stats.skywars.level}✫] KDR: ${
-            player.stats.skywars.KDRatio
-          } | [Duels] Wins: ${player.stats.duels.wins.toLocaleString()} WLR: ${player.stats.duels.WLRatio.toLocaleString()} | SB Weight: ${weight.toLocaleString()} | SB Level: ${skyblockLevel.toLocaleString()}`
+          `/oc ${playerInfo.nickname} ${playerInfo.meetRequirements ? "meets" : "Doesn't meet"} Requirements. [BW] [${
+            playerInfo.bwLevel
+          }✫] FKDR: ${playerInfo.bwFKDR} | [SW] [${playerInfo.swLevel}✫] KDR: ${playerInfo.swKDR} | [Duels] Wins: ${
+            playerInfo.duelsWins
+          } WLR: ${playerInfo.dWLR} | SB Weight: ${playerInfo.weight} | SB Level: ${playerInfo.skyblockLevel}`,
         );
         await delay(1000);
 
-        if (meetRequirements === true) {
-          if (config.minecraft.guildRequirements.autoAccept === true) {
-            bot.chat(`/guild accept ${username}`);
-          }
-
-          const statsEmbed = new EmbedBuilder()
-            .setColor(2067276)
-            .setTitle(`${player.nickname} has requested to join the Guild!`)
-            .setDescription(`**Hypixel Network Level**\n${player.level}\n`)
-            .addFields(
-              {
-                name: "Bedwars Level",
-                value: `${player.stats.bedwars.level}`,
-                inline: true,
-              },
-              {
-                name: "Skywars Level",
-                value: `${player.stats.skywars.level}`,
-                inline: true,
-              },
-              {
-                name: "Duels Wins",
-                value: `${player.stats.duels.wins}`,
-                inline: true,
-              },
-              {
-                name: "Bedwars FKDR",
-                value: `${player.stats.bedwars.finalKDRatio}`,
-                inline: true,
-              },
-              {
-                name: "Skywars KDR",
-                value: `${player.stats.skywars.KDRatio}`,
-                inline: true,
-              },
-              {
-                name: "Duels WLR",
-                value: `${player.stats.duels.KDRatio}`,
-                inline: true,
-              },
-              {
-                name: "Senither Weight",
-                value: `${weight.toLocaleString()}`,
-                inline: true,
-              },
-              {
-                name: "Skyblock Level",
-                value: `${skyblockLevel.toLocaleString()}`,
-                inline: true,
-              }
-            )
-            .setThumbnail(`https://www.mc-heads.net/avatar/${player.nickname}`)
-            .setFooter({
-              text: `by @duckysolucky | /help [command] for more information`,
-              iconURL: "https://imgur.com/tgwQJTX.png",
-            });
-
-          await client.channels.cache.get(`${config.discord.channels.loggingChannel}`).send({ embeds: [statsEmbed] });
+        if (playerInfo.meetRequirements === true && config.minecraft.guildRequirements.autoAccept) {
+          bot.chat(`/guild accept ${username}`);
         }
+
+        const statsEmbed = generateEmbed(playerInfo);
+        const acceptButton = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId("joinRequestAccept").setLabel("Accept Request").setStyle(ButtonStyle.Success),
+        );
+        await client.channels.cache
+          .get(`${config.discord.channels.loggingChannel}`)
+          .send({ embeds: [statsEmbed], components: [acceptButton] });
       }
     }
 
@@ -239,8 +142,9 @@ class StateHandler extends eventHandler {
       bot.chat(
         `/gc ${replaceVariables(messages.guildJoinMessage, {
           prefix: config.minecraft.bot.prefix,
-        })} | by @duckysolucky`
+        })} | by @duckysolucky`,
       );
+      await this.updateUser(username);
       return [
         this.minecraft.broadcastHeadedEmbed({
           message: replaceVariables(messages.joinMessage, { username }),
@@ -264,7 +168,7 @@ class StateHandler extends eventHandler {
         .replace(/\[(.*?)\]/g, "")
         .trim()
         .split(/ +/g)[0];
-
+      await this.updateUser(username);
       return [
         this.minecraft.broadcastHeadedEmbed({
           message: replaceVariables(messages.leaveMessage, { username }),
@@ -288,7 +192,7 @@ class StateHandler extends eventHandler {
         .replace(/\[(.*?)\]/g, "")
         .trim()
         .split(/ +/g)[0];
-
+      await this.updateUser(username);
       return [
         this.minecraft.broadcastHeadedEmbed({
           message: replaceVariables(messages.kickMessage, { username }),
@@ -318,6 +222,7 @@ class StateHandler extends eventHandler {
         .split(" to ")
         .pop()
         .trim();
+      await this.updateUser(username);
       return [
         this.minecraft.broadcastCleanEmbed({
           message: replaceVariables(messages.promotionMessage, {
@@ -349,6 +254,7 @@ class StateHandler extends eventHandler {
         .split(" to ")
         .pop()
         .trim();
+      await this.updateUser(username);
       return [
         this.minecraft.broadcastCleanEmbed({
           message: replaceVariables(messages.demotionMessage, {
@@ -760,6 +666,11 @@ class StateHandler extends eventHandler {
   isDiscordMessage(message) {
     const isDiscordMessage = /^(?<username>(?!https?:\/\/)[^\s»:>]+)\s*[»:>]\s*(?<message>.*)/;
 
+    const match = message.match(isDiscordMessage);
+    if (match && ["Party", "Guild", "Officer"].includes(match.groups.username)) {
+      return false;
+    }
+
     return isDiscordMessage.test(message);
   }
 
@@ -813,16 +724,17 @@ class StateHandler extends eventHandler {
 
   isAlreadyBlacklistedMessage(message) {
     return (
-      message.includes(`You've already ignored that player! /ignore remove Player to unignore them!`) &&
+      message.includes(`You've already blocked that player! /block remove <player> to unblock them!`) &&
       !message.includes(":")
     );
   }
+
   isBlacklistRemovedMessage(message) {
-    return message.startsWith("Removed") && message.includes("from your ignore list.") && !message.includes(":");
+    return message.startsWith("Unblocked") && message.endsWith(".") && !message.includes(":");
   }
 
   isBlacklistMessage(message) {
-    return message.startsWith("Added") && message.includes("to your ignore list.") && !message.includes(":");
+    return message.startsWith("Blocked") && message.endsWith(".") && !message.includes(":");
   }
 
   isGuildMessage(message) {
@@ -886,7 +798,7 @@ class StateHandler extends eventHandler {
       (message.includes("You must be the Guild Master to use that command!") ||
         message.includes("You do not have permission to use this command!") ||
         message.includes(
-          "I'm sorry, but you do not have permission to perform this command. Please contact the server administrators if you believe that this is in error."
+          "I'm sorry, but you do not have permission to perform this command. Please contact the server administrators if you believe that this is in error.",
         ) ||
         message.includes("You cannot mute a guild member with a higher guild rank!") ||
         message.includes("You cannot kick this player!") ||
@@ -1025,6 +937,37 @@ class StateHandler extends eventHandler {
         return "#FFFFFF";
       default:
         return "#FFFFFF";
+    }
+  }
+
+  async updateUser(player) {
+    try {
+      if (isUuid(player) === false) {
+        player = await getUUID(player);
+      }
+
+      if (config.verification.enabled === false) {
+        return;
+      }
+
+      const linkedData = readFileSync("data/linked.json");
+      if (linkedData === undefined) {
+        return;
+      }
+      const linked = JSON.parse(linkedData);
+      if (linked === undefined) {
+        return;
+      }
+
+      const linkedUser = Object.values(linked).find((u) => player);
+      if (linkedUser === undefined) {
+        return;
+      }
+
+      const user = await guild.members.fetch(linkedUser);
+      await updateRolesCommand.execute(null, user);
+    } catch {
+      //
     }
   }
 }
