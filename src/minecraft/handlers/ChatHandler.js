@@ -35,9 +35,11 @@ class StateHandler extends eventHandler {
     }
 
     if (config.discord.channels.debugMode === true) {
+      const username = message.split(">")[1].trim().split("joined.")[0].trim();
       this.minecraft.broadcastMessage({
-        fullMessage: colouredMessage,
+        fullMessage: message,
         message: message,
+        username: username,
         chat: "debugChannel",
       });
     }
@@ -970,6 +972,10 @@ class StateHandler extends eventHandler {
       //
     }
   }
+}
+
+async function getCurrentTime() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 module.exports = StateHandler;
