@@ -116,6 +116,9 @@ class DiscordManager extends CommunicationBridge {
     }
 
     switch (mode) {
+      case "logging":
+        await channel.send(`[${await this.getCurrentTime()}]: ${message}`);
+        break;
       case "bot":
         await channel.send({
           embeds: [
