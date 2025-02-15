@@ -91,7 +91,7 @@ class DiscordManager extends CommunicationBridge {
       return;
     }
 
-    const mode = chat === "debugChannel" ? "minecraft" : config.discord.other.messageMode.toLowerCase();
+    const mode = chat === "debugChannel" ? "logging" : config.discord.other.messageMode.toLowerCase();
     message = chat === "debugChannel" ? fullMessage : message;
     if (message !== undefined && chat !== "debugChannel") {
       Logger.broadcastMessage(
