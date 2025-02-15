@@ -296,6 +296,10 @@ class DiscordManager extends CommunicationBridge {
   formatMessage(message, data) {
     return replaceVariables(message, data);
   }
+  async getCurrentTime() {
+    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
+
 }
 
 module.exports = DiscordManager;
